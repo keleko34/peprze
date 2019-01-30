@@ -72,8 +72,9 @@ mocha.setup('bdd');
         .then(function(){
           return getFile('/test/tests/files/b.js');
         })
-        .then(function(v){
+        .then(function(v, p){
           expect(v).to.equal('b');
+          expect(p).to.equal('a');
           done();
         })
         .catch(function(){

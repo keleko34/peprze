@@ -9,6 +9,7 @@ window.Promise = (function(){
     this.__rejected = false;
     this.__finished = false;
     this.__base = undefined;
+    this.__passedValue = undefined;
     
     this.resolve = (function()
     {
@@ -24,11 +25,11 @@ window.Promise = (function(){
 
           if(this.base)
           {
-            __value = __resolver.call(this.base, this.__value);
+            __value = __resolver.call(this.base, this.__value, this.__passedValue);
           }
           else
           {
-            __value = __resolver(this.__value);
+            __value = __resolver(this.__value, this.__passedValue);
           }
 
         }
@@ -42,9 +43,17 @@ window.Promise = (function(){
         {
           __value.__resolve = __value.__resolve.concat(this.__resolve);
           __value.__reject = __value.__reject.concat(this.__reject);
+          __value.__passedValue = this.__value;
           if(__value.__fulfilled || __value.__finished)
           {
-            __value.resolve(__value.__value);
+            if(__value.base)
+            {
+              __value.resolve.call(__value.base, __value.__value, __value.__passedValue);
+            }
+            else
+            {
+              __value.resolve(__value.__value, __value.__passedValue);
+            }
           }
         }
         else
