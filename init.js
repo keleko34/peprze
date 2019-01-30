@@ -34,6 +34,12 @@ window.Promise = (function(){
           __value.__resolve = __value.__resolve.concat(this.__resolve);
           __value.__reject = __value.__reject.concat(this.__reject);
           __value.__value = __value.__value.concat(this.__value);
+          
+          this.__resolve = [];
+          this.__reject = [];
+          this.__value = [void 0];
+          this.__finished = true;
+          
           if(__value.__fulfilled || __value.__finished)
           {
             __value.resolve.apply((__value.base || __value), __value.__value);

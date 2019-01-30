@@ -36,6 +36,26 @@ mocha.setup('bdd');
     });
   }
   
+  function getFiles(url, url2, url3)
+  {
+    return getFile(url)
+    .then(function(){
+      return getFile(url2)
+      .then(function(){
+        return 'test';
+      })
+    })
+    .then(function(){
+      return getFile(url3)
+      .then(function(){
+        return 'test2';
+      })
+    })
+    .then(function(a, b, c){
+      return c + '-' + b + '-' + a;
+    })
+  }
+  
   describe("Promise:", function(){
     
     describe("Promise resolves:", function(){
@@ -82,6 +102,22 @@ mocha.setup('bdd');
           done();
         })
       });
+      
+      it('Should properly resolve a returned promise with its own returned promise', function(done){
+        getFile('/test/tests/files/a.js')
+        .then(function(){
+          return getFiles('/test/tests/files/a.js', '/test/tests/files/b.js', '/test/tests/files/b.js');
+        })
+        .then(function(v, p){
+          expect(v).to.equal('a-test-test2');
+          expect(p).to.equal('test');
+          done();
+        })
+        .catch(function(){
+          expect(false).to.equal(true);
+          done();
+        })
+      })
     });
     
     describe("Promise rejects:", function(){
