@@ -16,7 +16,7 @@ window.Promise = (function(){
           __resolver = this.__resolve.splice(0,1)[0];
 
       this.__fulfilled = true;
-      this.__value = arguments[0];
+      if(arguments[0]) this.__value = arguments[0];
 
       if(__resolver)
       {
@@ -65,7 +65,7 @@ window.Promise = (function(){
 
       this.__fulfilled = true;
       this.__rejected = true;
-      this.__value = arguments[0];
+      if(arguments[0]) this.__value = arguments[0];
 
       if(__rejecter)
       {
@@ -107,12 +107,14 @@ window.Promise = (function(){
   Promise.prototype.then = function(v)
   {
     this.__resolve.push(v);
+    if(this.__fulfilled && this.__finished && !this.__rejected) this.resolve();
     return this;
   }
 
   Promise.prototype.catch = function(v)
   {
     this.__reject.push(v);
+    if(this.__fulfilled && this.__finished && this.__rejected) this.reject();
     return this;
   }
   
