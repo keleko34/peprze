@@ -1,111 +1,114 @@
 window.Promise = (function(){
   
-  function Promise(res, resolvers, rejecters)
+  function setDescriptor(value, writable, enumerable, redefinable)
   {
-    this.__value = [void 0];
-    this.__resolve = (resolvers ? resolvers : []);
-    this.__reject = (rejecters ? rejecters : []);
-    this.__fulfilled = false;
-    this.__rejected = false;
-    this.__finished = false;
-    this.__base = undefined;
+    return {
+      value: value,
+      writable: !!writable,
+      enumerable: !!enumerable,
+      configurable: !!redefinable
+    }
+  }
+  
+  function Promise(control)
+  {
+    this.value = void 0;
+    this.fulfilled = false;
+    this.control = control;
     
-    this.resolve = (function()
+    Object.defineProperties(this, {
+      __value: setDescriptor([this.value], true),
+      __resolve: setDescriptor([], true),
+      __reject: setDescriptor([], true),
+      __rejected: setDescriptor(false, true),
+      __awaiting: setDescriptor(true, true),
+      __fulfilled: setDescriptor(false, true),
+      __aborted: setDescriptor(false, true),
+      __base: setDescriptor(undefined, true),
+      __control: setDescriptor(control)
+    });
+    
+    setTimeout((function(){
+      this.__control.call(this, this.resolve.bind(this), this.reject.bind(this));
+    }).bind(this), 0);
+  }
+  
+  function execute(type, value)
+  {
+    this.__awaiting = false;
+    
+    if(value !== undefined) this.__value[0] = this.value = value;
+    
+    if(type) this.__rejected = true;
+    
+    var __value,
+        __method = this[(!type ? '__resolve' : '__reject')].splice(0,1)[0];
+    
+    if(__method)
     {
-      var __value,
-          __resolver = this.__resolve.splice(0,1)[0];
-
-      this.__fulfilled = true;
-      if(arguments[0]) this.__value[0] = arguments[0];
-
-      if(__resolver)
+      __value = __method.apply((this.__base || this), this.__value);
+      
+      if(__value instanceof Promise)
       {
-        try{
-          __value = __resolver.apply((this.base || this), this.__value);
-        }
-        catch(e)
-        {
-          this.reject(e);
-          return console.error("Rejection Error in Promise on", e.stacktrace);
-        }
-
-        if(__value instanceof Promise)
-        {
-          __value.__resolve = __value.__resolve.concat(this.__resolve);
-          __value.__reject = __value.__reject.concat(this.__reject);
-          __value.__value = __value.__value.concat(this.__value);
-          
-          this.__resolve = [];
-          this.__reject = [];
-          this.__value = [void 0];
-          this.__finished = true;
-          
-          if(__value.__fulfilled || __value.__finished)
-          {
-            __value.resolve.apply((__value.base || __value), __value.__value);
-          }
-        }
-        else
-        {
-          this.resolve(__value);
-        }
+        var __resolves = this.__resolve,
+            __rejects = this.__reject,
+            __values = this.__value;
+        
+        /* garbage collect */
+        this.__fulfilled = this.fulfilled = true;
+        this.__value = this.value = null;
+        this.__resolve = null;
+        this.__reject = null;
+        this.__base = null;
+        this.__aborted = true;
+        
+        __value.__resolve = __value.__resolve.concat(__resolves);
+        __value.__reject = __value.__reject.concat(__rejects);
+        __value.__value = __value.__value.concat(__values);
+        
+        if(__value.fulfilled && !__value.__aborted) __value[__value.rejected ? 'reject' : 'resolve'].call(__value);
       }
       else
       {
-        if(!this.__rejected) this.__finished = true;
+        this[(!type ? 'resolve' : 'reject')].call(this, __value);
       }
-    }).bind(this);
-    
-    this.reject = (function()
-    {
-      var __value,
-          __rejecter = this.__reject.splice(0,1)[0];
-
-      this.__fulfilled = true;
-      this.__rejected = true;
-      if(arguments[0]) this.__value[0] = arguments[0];
-
-      if(__rejecter)
-      {
-        try{
-          __value = __rejecter.apply((this.base || this), this.__value);
-        }
-        catch(e)
-        {
-          this.reject(e);
-          return console.error("Rejection Error in Promise on", e.stacktrace);
-        }
-        this.reject(__value);
-      }
-      else
-      {
-        this.__finished = true;
-      }
-    }).bind(this);
-    
-    try{
-      this.__control = res(this.resolve, this.reject);
     }
-    catch(e)
+    else
     {
-      this.reject(e);
-      console.error("Rejection Error in Promise on", e.stacktrace);
+      this.__fulfilled = this.fulfilled = true;
     }
   }
-
-  Promise.prototype.then = function(v)
+  
+  function resolve(v)
   {
-    this.__resolve.push(v);
-    if(this.__fulfilled && this.__finished && !this.__rejected) this.resolve();
+    return execute.call(this, 0, v);
+  }
+  
+  function reject(v)
+  {
+    return execute.call(this, 1, v);
+  }
+  
+  function then(func)
+  {
+    this.__resolve.push(func);
+    if(this.__fulfilled && !this.__aborted && !this.__rejected) this.resolve();
     return this;
   }
-
-  Promise.prototype.catch = function(v)
+  
+  function error(func)
   {
-    this.__reject.push(v);
-    if(this.__fulfilled && this.__finished && this.__rejected) this.reject();
+    this.__reject.push(func);
+    if(this.__fulfilled && !this.__aborted && this.__rejected) this.resolve();
     return this;
   }
+  
+  Object.defineProperties(Promise.prototype, {
+    resolve: setDescriptor(resolve),
+    reject: setDescriptor(reject),
+    then: setDescriptor(then, false, true),
+    catch: setDescriptor(error, false, true)
+  })
   
   return Promise;
 }())

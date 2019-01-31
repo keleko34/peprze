@@ -151,14 +151,14 @@ mocha.setup('bdd');
       it('Should properly reject a returned promise', function(done){
         getFile('/test/tests/files/a.js')
         .then(function(){
-          return getFile('/test/tests/files/c.js');
+          return getFile('/test/tests/files/c.js')
+          .catch(function(err){
+            expect(err instanceof Error).to.equal(true);
+            done();
+          })
         })
         .then(function(v){
           expect(v).to.equal('c');
-          done();
-        })
-        .catch(function(err){
-          expect(err instanceof Error).to.equal(true);
           done();
         })
       });
