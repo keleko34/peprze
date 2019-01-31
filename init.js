@@ -21,11 +21,7 @@ window.Promise = (function(){
   }
   
   function Promise(control)
-  {
-    this.value = void 0;
-    this.fulfilled = false;
-    this.control = control;
-    
+  { 
     Object.defineProperties(this, {
       __value: setDescriptor([], true),
       __resolve: setDescriptor([], true),
@@ -39,6 +35,12 @@ window.Promise = (function(){
       __finished: setDescriptor(undefined, true),
       __passed: setDescriptor(undefined, true)
     });
+    
+    Object.defineProperties(this, {
+		value: setSetterDescriptor(function(){ return this.__value[0]; }, function(){}, true),
+		control: setSetterDescriptor(function(){ return this.__control; }, function(){}, true),
+		fulfilled: setSetterDescriptor(function(){ return this.__fulfilled; }, function(){}, true)
+	});
     
     setTimeout((function(){
       this.__control.call(this, this.resolve.bind(this), this.reject.bind(this));
@@ -82,7 +84,7 @@ window.Promise = (function(){
   {
     this.__awaiting = false;
     
-    if(value !== undefined) this.__value[0] = this.value = value;
+    if(value !== undefined) this.__value[0] = value;
     
     if(type) this.__rejected = true;
     
@@ -95,7 +97,7 @@ window.Promise = (function(){
       
       if(__value instanceof Promise) return next.call(this, __value, __method);
       
-      if(__value !== undefined) __method.__value[0] = this.value = __value;
+      if(__value !== undefined) __method.__value[0] = __value;
       this[(!type ? 'resolve' : 'reject')].call(this, __value);
     }
     else
@@ -107,7 +109,7 @@ window.Promise = (function(){
         
         if(__value instanceof Promise) return next.call(this, __value, this.__finished);
         
-        if(__value !== undefined) this.__finished.__value[0] = this.value = __value;
+        if(__value !== undefined) this.__value[0] = __value;
       }
     }
   }
@@ -137,7 +139,7 @@ window.Promise = (function(){
     if(this.__aborted)
     {
       this.__passed.then(function(){
-        __self.resolve();
+        __self.resolve(__self.value);
       });
     }
     return this;
@@ -153,7 +155,7 @@ window.Promise = (function(){
     if(this.__aborted)
     {
       this.__passed.catch(function(){
-        __self.reject();
+        __self.reject(__self.value);
       });
     }
     return this;
