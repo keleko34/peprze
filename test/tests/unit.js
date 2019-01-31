@@ -39,20 +39,20 @@ mocha.setup('bdd');
   function getFiles(url, url2, url3)
   {
     return getFile(url)
-    .then(function(){
+    .then(function(a){
       return getFile(url2)
-      .then(function(){
+      .then(function(b){
         return 'test';
       })
     })
-    .then(function(){
+    .then(function(a, b){
       return getFile(url3)
-      .then(function(){
+      .then(function(c){
         return 'test2';
       })
     })
     .then(function(a, b, c){
-      return c + '-' + b + '-' + a;
+      return a + '-' + b + '-' + c;
     })
   }
   
@@ -93,8 +93,8 @@ mocha.setup('bdd');
           return getFile('/test/tests/files/b.js');
         })
         .then(function(v, p){
-          expect(v).to.equal('b');
-          expect(p).to.equal('a');
+          expect(v).to.equal('a');
+          expect(p).to.equal('b');
           done();
         })
         .catch(function(){
@@ -109,8 +109,8 @@ mocha.setup('bdd');
           return getFiles('/test/tests/files/a.js', '/test/tests/files/b.js', '/test/tests/files/b.js');
         })
         .then(function(v, p){
-          expect(v).to.equal('a-test-test2');
-          expect(p).to.equal('test');
+          expect(v).to.equal('a');
+          expect(p).to.equal('a-test-test2');
           done();
         })
         .catch(function(){
@@ -159,6 +159,67 @@ mocha.setup('bdd');
         })
         .then(function(v){
           expect(v).to.equal('c');
+          done();
+        })
+      });
+    });
+    
+    describe("Promise finally:", function(){
+        it('Should properly call finally after all then statements have finished', function(done){
+          var cb = spy();
+          
+          getFile('/test/tests/files/a.js')
+          .then(cb)
+          .then(cb)
+          .finally(function(v){
+            expect(v).to.equal('a');
+            expect(cb.callCount).to.equal(2);
+            done();
+          })
+        })
+      
+        it('Should properly call finally after all catch statements have finished', function(done){
+          var cb = spy();
+          
+          getFile('/test/tests/files/c.js')
+          .catch(cb)
+          .catch(cb)
+          .finally(function(v){
+            expect(v instanceof Error).to.equal(true);
+            expect(cb.callCount).to.equal(2);
+            done();
+          })
+        })
+    });
+    
+    describe("Promise all, race:", function(){
+      it('Should properly run all promises in async and return all content', function(done){
+        
+        var promises = [getFile('/test/tests/files/a.js'), getFile('/test/tests/files/b.js'), getFile('/test/tests/files/b.js')];
+        
+        Promise.all(promises)
+        .then(function(a, b, c){
+          expect(a).to.equal('a');
+          expect(b).to.equal('b');
+          expect(c).to.equal('b');
+          done();
+        })
+        .catch(function(){
+          expect(false).to.equal(true);
+          done();
+        })
+      });
+      
+      it('Should properly use the race method to return the first promise content', function(done){
+        var promises = [getFile('/test/tests/files/a.js'), getFile('/test/tests/files/b.js')];
+        
+        Promise.race(promises)
+        .then(function(v){
+          expect(['a','b'].indexOf(v)).to.not.equal(-1);
+          done();
+        })
+        .catch(function(){
+          expect(false).to.equal(true);
           done();
         })
       });
