@@ -27,7 +27,7 @@ window.Promise = (function(){
     this.control = control;
     
     Object.defineProperties(this, {
-      __value: setDescriptor([this.value], true),
+      __value: setDescriptor([], true),
       __resolve: setDescriptor([], true),
       __reject: setDescriptor([], true),
       __rejected: setDescriptor(false, true),
