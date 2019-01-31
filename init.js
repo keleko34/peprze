@@ -36,7 +36,8 @@ window.Promise = (function(){
       __aborted: setDescriptor(false, true),
       __base: setDescriptor(undefined, true),
       __control: setDescriptor(control),
-      __finished: setDescriptor(undefined, true)
+      __finished: setDescriptor(undefined, true),
+      __passed: setDescriptor(undefined, true)
     });
     
     setTimeout((function(){
@@ -46,21 +47,33 @@ window.Promise = (function(){
   
   function next(promise, method)
   {
-    var __resolves = this.__resolve,
+    var __self = this,
+        __resolves = this.__resolve,
         __rejects = this.__reject,
+        __finished = this.__finished,
+        __base = this.__base,
         __values = method.__value;
 
     Object.defineProperty(__values,__values.length, setSetterDescriptor(function(){ return promise.__value[0]; }, function(){}, true, true));
 
-    /* garbage collect */
-    this.__fulfilled = this.fulfilled = true;
-    this.__resolve = null;
-    this.__reject = null;
-    this.__base = null;
-    this.__aborted = true;
+    this.__fulfilled = this.fulfilled = this.__aborted = true;
+    this.__resolve = [];
+    this.__reject = [];
+    this.__passed = promise;
 
     promise.__resolve = promise.__resolve.concat(__resolves);
     promise.__reject = promise.__reject.concat(__rejects);
+    promise.__base = __base;
+    
+    if(__finished)
+    {
+      var __promFinished = promise.__finished;
+      promise.__finished = function()
+      {
+        if(__promFinished) __promFinished.apply(this, arguments);
+        __finished.apply((__base || __self), __values);
+      }
+    }
 
     if(promise.fulfilled && !promise.__aborted) promise[promise.rejected ? 'reject' : 'resolve'].call(promise);
   }
@@ -111,6 +124,8 @@ window.Promise = (function(){
   
   function then(func, err)
   {
+    var __self = this;
+    
     this.__resolve.push(func);
     Object.defineProperty(func, '__value', setSetterDescriptor((function(){ return this.__value; }).bind(this),function(){}, false, true));
     if(err)
@@ -119,14 +134,28 @@ window.Promise = (function(){
       Object.defineProperty(err, '__value', setSetterDescriptor((function(){ return this.__value; }).bind(this),function(){}, false, true));
     }
     if(this.__fulfilled && !this.__aborted && !this.__rejected) this.resolve();
+    if(this.__aborted)
+    {
+      this.__passed.then(function(){
+        __self.resolve();
+      });
+    }
     return this;
   }
   
   function error(func)
   {
+    var __self = this;
+    
     this.__reject.push(func);
     Object.defineProperty(func, '__value', setSetterDescriptor((function(){ return this.__value; }).bind(this),function(){}, false, true));
     if(this.__fulfilled && !this.__aborted && this.__rejected) this.resolve();
+    if(this.__aborted)
+    {
+      this.__passed.catch(function(){
+        __self.reject();
+      });
+    }
     return this;
   }
   

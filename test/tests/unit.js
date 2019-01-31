@@ -190,6 +190,24 @@ mocha.setup('bdd');
             done();
           })
         })
+      
+        it('Should properly call finally even after inner returned promises', function(done){
+          var cb = spy();
+          
+          getFile('/test/tests/files/a.js')
+          .then(function(v){
+            
+            return getFile('/test/tests/files/b.js')
+            .then(cb);
+          })
+          .then(cb)
+          .finally(function(a, b){
+            expect(a).to.equal('a');
+            expect(b).to.equal('b');
+            expect(cb.callCount).to.equal(2);
+            done();
+          })
+        })
     });
     
     describe("Promise all, race:", function(){
