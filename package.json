@@ -2,7 +2,7 @@
   "name": "peprze",
   "version": "1.1.6",
   "description": "A simple Promise shim and functionality extension",
-  "main": "init.js",
+  "main": "peprze.js",
   "scripts": {
     "test": "node ./test/run.js",
     "build": "node ./build.js"

@@ -32,7 +32,7 @@ The script can be loaded both in the head and in the body.
 All functionality is automatically loaded as soon as the file is loaded.
 *Note: include this script before any other scripts for proper implementation* 
 ```
- <script src="/(node_modules|bower_modules)/peprze/init.min.js"></script>
+ <script src="/(node_modules|bower_modules)/peprze/peprze.min.js"></script>
 ```
 
 To start using it is as simple as instancing a new promise in the same way as native promises
