@@ -47,6 +47,18 @@ window.Promise = (function(){
     }).bind(this), 0);
   }
   
+  function promiseResolve()
+  {
+    var args = arguments;
+    return new Promise(function(resolve){ resolve.apply(this, args); })
+  }
+  
+  function promiseReject()
+  {
+    var args = arguments;
+    return new Promise(function(resolve, reject){ reject.apply(this, args); })
+  }
+  
   function next(promise, method)
   {
     var __self = this,
@@ -233,7 +245,9 @@ window.Promise = (function(){
   
   Object.defineProperties(Promise, {
     all: setDescriptor(all, false, true),
-    race: setDescriptor(race, false, true)
+    race: setDescriptor(race, false, true),
+    resolve: setDescriptor(promiseResolve, false, true),
+    reject: setDescriptor(promiseReject, false, true)
   })
   
   return Promise;

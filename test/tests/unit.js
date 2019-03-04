@@ -118,6 +118,14 @@ mocha.setup('bdd');
           done();
         })
       })
+      
+      it('Should properly create an immediate resolve promise', function(done){
+        Promise.resolve('a')
+        .then(function(v){
+          expect(v).to.equal('a');
+          done();
+        })
+      })
     });
     
     describe("Promise rejects:", function(){
@@ -162,6 +170,14 @@ mocha.setup('bdd');
           done();
         })
       });
+      
+      it('Should properly create an immediate reject promise', function(done){
+        Promise.reject('a')
+        .catch(function(v){
+          expect(v).to.equal('a');
+          done();
+        })
+      })
     });
     
     describe("Promise finally:", function(){
