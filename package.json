@@ -1,6 +1,6 @@
 {
   "name": "peprze",
-  "version": "1.5.42",
+  "version": "1.5.43",
   "description": "A simple Promise shim and functionality extension",
   "main": "peprze.js",
   "scripts": {
